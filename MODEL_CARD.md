@@ -20,7 +20,11 @@ base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 
 ## Interactive Colab Tutorials
 
-This release ships no tutorial notebook (`tutorials/` is absent). The package is exercised through its test suite (`tests/`) and the run instructions in the README; a `NOTEBOOK_SPEC` 1.0 `TASK-INFERENCE` notebook is a follow-up, not a claim this card makes.
+This pipeline provides a ready-to-run interactive Google Colab notebook that exercises the repository's public API end to end — bootstrap a fresh runtime, stage and verify the pinned upstream revision, validate an input, run the task, and inspect and export the outputs:
+
+- **Task Inference Tutorial**:  
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kurtvalcorza/eva02-classification-pipeline/blob/main/tutorials/eva02_classification_colab.ipynb) [`eva02_classification_colab.ipynb`](https://github.com/kurtvalcorza/eva02-classification-pipeline/blob/main/tutorials/eva02_classification_colab.ipynb)  
+  *ImageNet-1k classification with the pinned EVA-02 Base 448 weights on a synthetic in-code sample: argmax decision plus rank-ordered top-5 softmax scores; CPU works but is slow at 448 px (107 GMACs); `top_k_accuracy` only when a ground-truth index is supplied.*
 
 ---
 
