@@ -1,16 +1,28 @@
 ---
 license: mit
-model_card_spec: "1.0"
+model_card_spec: "1.1"
 pipeline_tag: image-classification
 base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 ---
 
-# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0)
+# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0) — Image Classification
 
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448-ffcc4d?style=flat)](https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)
-[![GitHub](https://img.shields.io/badge/GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
-[![arXiv](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448.mim__in22k__ft__in22k__in1k-ffcc4d?style=flat)](https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)
+[![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
+[![arXiv Paper](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Pipeline](https://img.shields.io/badge/Pipeline-eva02--classification--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/eva02-classification-pipeline)
+
+> [!WARNING]
+> ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
+
+---
+
+## Interactive Colab Tutorials
+
+This release ships no tutorial notebook (`tutorials/` is absent). The package is exercised through its test suite (`tests/`) and the run instructions in the README; a `NOTEBOOK_SPEC` 1.0 `TASK-INFERENCE` notebook is a follow-up, not a claim this card makes.
+
+---
 
 ###### Description
 
