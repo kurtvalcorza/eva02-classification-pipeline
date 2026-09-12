@@ -1,0 +1,25 @@
+{
+  "format": "dimer_hf_snapshot",
+  "formatVersion": 1,
+  "modelKey": "eva02-base-448",
+  "modelId": "timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k",
+  "revision": "81063ecfe9c381a16a19d06f396d6c7011aa426a",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 5454,
+      "sha256": "b347298844860ff288638f1d7c0baece71d9fe1cd796eefbfbf3f0780175ba07"
+    },
+    {
+      "path": "config.json",
+      "bytes": 653,
+      "sha256": "d62e73f578eb363032000b6bfcc57764c6a5d10ee2562cbfe3f105d795e1c4be"
+    },
+    {
+      "path": "model.safetensors",
+      "bytes": 348492484,
+      "sha256": "533937d6f9f8f8d4f50627ef0d00829a5015861a5b67e1c69c5a5e45b7dc2609"
+    }
+  ],
+  "totalBytes": 348498591
+}
