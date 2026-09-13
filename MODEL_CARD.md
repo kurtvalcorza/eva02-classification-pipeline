@@ -3,6 +3,8 @@ license: mit
 model_card_spec: "1.1"
 pipeline_tag: image-classification
 base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
+date_published: "2023-03-31"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)"
 ---
 
 # EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0) — Image Classification
@@ -11,7 +13,6 @@ base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Pipeline](https://img.shields.io/badge/Pipeline-eva02--classification--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/eva02-classification-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -28,7 +29,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 `timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k` is the EVA-02 Base vision transformer (Fang et al., arXiv:2303.11331): pre-trained on ImageNet-22k with masked image modelling using EVA-CLIP as the teacher, fine-tuned on ImageNet-22k and then on ImageNet-1k by the paper authors, converted to float32 and published in `timm` (upstream README), pinned here to revision `81063ecfe9c381a16a19d06f396d6c7011aa426a`. The network embeds a fixed 448×448 image as 32×32 = 1024 patches of 14 px plus a class token (1025 tokens of width 768, per the upstream README `forward_features` example), runs them through transformer blocks with SwiGLU MLPs, rotary position embeddings and an extra LayerNorm in the MLP (upstream README), mean-pools the tokens (`global_pool: "avg"` in the snapshot `config.json`) and applies a 1000-way `head`. Upstream reports 87.1 M parameters and 107.1 GMACs — roughly 24× the compute of the sibling ConvNeXt-Tiny at 224 px — which is the price of the 448-px input. Inference maps a normalised 3×448×448 tensor to 1000 logits in one forward pass; nothing is adapted or fine-tuned here. What this repository adds is packaging: the `EVA02ClassificationPipeline` class in `src/eva02_classification_pipeline/pipeline.py`, digest verification of the local snapshot (`verify_snapshot`), input validation, a fixed output contract and a `top_k_accuracy` helper.
 
