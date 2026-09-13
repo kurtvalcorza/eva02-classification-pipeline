@@ -1,6 +1,6 @@
 """Static release-asset validation for the EVA-02 Base 448 classification DIMER pipeline.
 
-Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 1.1 §3.6), the tutorial
+Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 2.0 §3.6), the tutorial
 registry, model card, README, STATUS.md and weight documentation for source conformance and
 cross-document identity consistency, and runs the generator parity checks (PAR1–PAR3).
 
@@ -23,25 +23,29 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = "eva02_classification_pipeline"
 REPO_NAME = "eva02-classification-pipeline"
 NOTEBOOK_NAME = "eva02_classification_colab.ipynb"
-EXPECTED_PROFILE = "TASK-INFERENCE"
+EXPECTED_PROFILE = "E2E"
 EXPECTED_MODEL_ID = "timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k"
 PIPELINE_CLASS = "EVA02ClassificationPipeline"
 # Additional 40-hex revisions a document may legitimately cite (none by default).
 KNOWN_SHAS: frozenset[str] = frozenset(())
 # Colab form gates that must default to the non-interactive sample path.
-BYOD_GATES = ("USE_BYOD",)
+BYOD_GATES = ("USE_BYOD", "USE_BYOD_DATASET")
 # Machine-readable artifacts the notebook must write (OUT1-OUT3, DAT24, EVAL21).
 EXPECTED_OUTPUTS = (
     "outputs/eva02_classification_input_manifest.json",
     "outputs/eva02_classification_evaluation_report.json",
     "outputs/eva02_classification_result.json",
     "outputs/eva02_classification_top_k.csv",
+    "outputs/eva02_classification_finetuned/model.safetensors",
+    "outputs/eva02_classification_finetuned/model-config.json",
 )
 # Profile-specific code the notebook must exercise through the carried module's public API.
 CODE_MARKERS = (
     "input_manifest = validate_inputs(image, top_k=5, names=[image_name])",
     "validate_inputs(Image.new('RGB', (MAX_IMAGE_SIDE + 1, 8)))",
     "result = pipe.predict(image, top_k=5)",
+    "pipe.fit(",
+    "reloaded_pipe = EVA02ClassificationPipeline.from_pretrained(weights_dir=",
     "report = evaluation_report(result, targets, sample_kind=sample_kind)",
     "targets = None if ground_truth is None else [ground_truth]",
     "print({'ceilings': {'NUM_CLASSES': NUM_CLASSES, 'MAX_IMAGE_SIDE': MAX_IMAGE_SIDE, 'MAX_BATCH': MAX_BATCH}})",
@@ -59,7 +63,7 @@ CODE_MARKERS = (
 # Profile-specific learner-facing statements.
 MARKDOWN_MARKERS = (
     "**Capability:** ImageNet-1k single-label image classification (1000 classes)",
-    "**No adaptation occurs:**",
+    "**In-kernel fine-tuning:**",
     "**squash-resizes every input to a fixed 448 x 448**",
     "aspect ratio is not preserved",
     "**CPU works but is slow**",
@@ -90,10 +94,10 @@ FORBIDDEN_OUTSIDE_MODULE = (
 # ---------------------------------------------------------------------------
 # Shared checks. Everything below is source/structure validation only. Passing
 # these checks is NOT clean-runtime execution evidence under DIMER Notebook
-# Specification 1.1; see docs/release-verification.md for the release gate.
+# Specification 2.0; see docs/release-verification.md for the release gate.
 # ---------------------------------------------------------------------------
 
-NOTEBOOK_SPEC = "1.1"
+NOTEBOOK_SPEC = "2.0"
 ALLOWED_PROFILES = {"E2E", "ARTIFACT-INFERENCE", "TASK-INFERENCE", "MULTI-CAPABILITY", "SMOKE"}
 STATUS_TOKENS = ("Candidate", "Release-grade")
 PLACEHOLDER = re.compile(r"\b(TODO|TBD|FIXME)\b|Insert text here|Tooltip:", re.I)
