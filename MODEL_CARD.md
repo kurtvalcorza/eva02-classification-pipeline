@@ -1,16 +1,32 @@
 ---
 license: mit
-model_card_spec: "1.0"
+model_card_spec: "1.1"
 pipeline_tag: image-classification
 base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 ---
 
-# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0)
+# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0) — Image Classification
 
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448-ffcc4d?style=flat)](https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)
-[![GitHub](https://img.shields.io/badge/GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
-[![arXiv](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448.mim__in22k__ft__in22k__in1k-ffcc4d?style=flat)](https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)
+[![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
+[![arXiv Paper](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Pipeline](https://img.shields.io/badge/Pipeline-eva02--classification--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/eva02-classification-pipeline)
+
+> [!WARNING]
+> ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
+
+---
+
+## Interactive Colab Tutorials
+
+This pipeline provides a ready-to-run interactive Google Colab notebook that exercises the repository's public API end to end — bootstrap a fresh runtime, stage and verify the pinned upstream revision, validate an input, run the task, and inspect and export the outputs:
+
+- **Task Inference Tutorial**:  
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kurtvalcorza/eva02-classification-pipeline/blob/main/tutorials/eva02_classification_colab.ipynb) [`eva02_classification_colab.ipynb`](https://github.com/kurtvalcorza/eva02-classification-pipeline/blob/main/tutorials/eva02_classification_colab.ipynb)  
+  *ImageNet-1k classification with the pinned EVA-02 Base 448 weights on a synthetic in-code sample: argmax decision plus rank-ordered top-5 softmax scores; CPU works but is slow at 448 px (107 GMACs); `top_k_accuracy` only when a ground-truth index is supplied.*
+
+---
 
 ###### Description
 
@@ -50,7 +66,7 @@ Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, 
 
 ###### Performance Measures
 
-The only measure the code reports is `top_k_accuracy(predictions, targets, k)` in `pipeline.py`: the fraction of images whose target index appears among the first `k` predicted indices, for any `k` up to the requested `top_k`. It captures discrete correctness of the ranking, which suits a 1000-way single-label classifier where the operational question is "is the right class first, or at least in the shortlist". It says nothing about calibration or per-class behaviour, so a reader using top-1 alone cannot tell whether errors are near-misses (fixable by a shortlist) or confident mistakes. Upstream reports 88.692 % top-1 / 98.722 % top-5 on the ImageNet-1k validation set at 448 px for this checkpoint (upstream README comparison table; the `mim_in22k_ft_in1k` row without the intermediate 22k fine-tune is a different checkpoint at 88.23 %); this pipeline has not reproduced those numbers and reports no accuracy of its own.
+The only measure the code reports is `top_k_accuracy(predictions, targets, k)` in `pipeline.py`: the fraction of images whose target index appears among the first `k` predicted indices, for any `k` up to the requested `top_k`. It captures discrete correctness of the ranking, which suits a 1000-way single-label classifier where the operational question is "is the right class first, or at least in the shortlist". It says nothing about calibration or per-class behaviour, so a reader using top-1 alone cannot tell whether errors are near-misses (fixable by a shortlist) or confident mistakes. Upstream reports 88.692 % top-1 / 98.722 % top-5 on the ImageNet-1k validation set at 448 px for this checkpoint (upstream README comparison table; the `mim_in22k_ft_in1k` row without the intermediate 22k fine-tune is a different checkpoint at 88.23 %); this pipeline has not reproduced those numbers and reports no accuracy of its own. The public `evaluation_report(result, targets)` helper is the only reporting path: it emits a machine-readable report whose verdict is `sample-sanity` with `top_k_accuracy` at k=1 and k=5 when ground-truth indices are supplied, and `not-measurable` otherwise, stating in that case what labelled data would make the task measurable.
 
 ###### Decision thresholds
 
@@ -72,7 +88,7 @@ The pipeline is not intended for decisions in health, safety, criminal justice, 
 
 ###### Mitigations
 
-Implemented and inspectable in `src/eva02_classification_pipeline/pipeline.py`: (1) supply chain — `MODEL_REVISION` is a 40-hex commit; `verify_snapshot` re-hashes every file in `weights/eva02-base-448/dimer-base-manifest.json` (348 MB, so the check takes a few seconds and is part of the measured load time) and raises on the first size or SHA-256 mismatch before any weight is loaded; the Hub path is taken only with `allow_download=True` and then through timm's `hf-hub:<id>@<revision>` form; `trust_remote_code` is never enabled (timm executes no remote code). (2) Input integrity — `_validate` rejects non-PIL inputs, empty or over-size batches, and images outside 1–4096 px before the model runs. (3) Reproducibility — exact `==` dependency pins, `model.eval()`, deterministic preprocessing from the snapshot's `pretrained_cfg`, and `model_id`/`model_revision` in every result. (4) Refusals — no feature-map or training API is exposed; a missing snapshot with `allow_download=False` raises `FileNotFoundError`. No statistical mitigation (class re-balancing) is applied because the pipeline does not train.
+Implemented and inspectable in `src/eva02_classification_pipeline/pipeline.py`: (1) supply chain — `MODEL_REVISION` is a 40-hex commit; `verify_snapshot` re-hashes every file in `weights/eva02-base-448/dimer-base-manifest.json` (348 MB, so the check takes a few seconds and is part of the measured load time) and raises on the first size or SHA-256 mismatch before any weight is loaded; the Hub path is taken only with `allow_download=True` and then through timm's `hf-hub:<id>@<revision>` form; `trust_remote_code` is never enabled (timm executes no remote code). (2) Input integrity — `_validate` rejects non-PIL inputs, empty or over-size batches, and images outside 1–4096 px before the model runs, and the public `validate_inputs(images, top_k, names=...)` stage routes through the same private check so it raises exactly what `predict` raises while returning a machine-readable input manifest of the schema, ceilings, per-input observations and verdict. (3) Reproducibility — exact `==` dependency pins, `model.eval()`, deterministic preprocessing from the snapshot's `pretrained_cfg`, and `model_id`/`model_revision` in every result. (4) Refusals — no feature-map or training API is exposed; a missing snapshot with `allow_download=False` raises `FileNotFoundError`. No statistical mitigation (class re-balancing) is applied because the pipeline does not train.
 
 ###### Risks and harms
 
