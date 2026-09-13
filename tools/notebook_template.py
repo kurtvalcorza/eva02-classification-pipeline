@@ -1,0 +1,268 @@
+"""Per-repository template for tools/build_notebook.py (NOTEBOOK_SPEC 1.1 §3.6 standalone carrier).
+
+Only the task-specific prose and stage cells live here. Runtime install, the embedded pipeline
+module, and the model pin/stage/verify cells are produced by the generator from repository
+sources so they cannot drift from the package.
+"""
+# ruff: noqa: E501  -- markdown prose and code-cell text are kept on single lines for readable rendering
+
+TEMPLATE = {
+    "package": "eva02_classification_pipeline",
+    "repo_name": "eva02-classification-pipeline",
+    "stem": "eva02_classification",
+    "notebook_name": "eva02_classification_colab.ipynb",
+    "profile": "TASK-INFERENCE",
+    "pipeline_class": "EVA02ClassificationPipeline",
+    "weights_key": "eva02-base-448",
+    "runtime_imports": ["torch", "timm"],
+    "title": "EVA-02 Base 448 — DIMER image classification tutorial (standalone)",
+    "badges": [
+        (
+            "GitHub",
+            "https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white",
+            "https://github.com/kurtvalcorza/eva02-classification-pipeline",
+        ),
+        (
+            "Open In Colab",
+            "https://colab.research.google.com/assets/colab-badge.svg",
+            "https://colab.research.google.com/github/kurtvalcorza/eva02-classification-pipeline/blob/main/tutorials/eva02_classification_colab.ipynb",
+        ),
+        (
+            "Hugging Face",
+            "https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448-ffcc4d?style=flat",
+            "https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k",
+        ),
+        (
+            "Upstream",
+            "https://img.shields.io/badge/Upstream-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white",
+            "https://github.com/baaivision/EVA",
+        ),
+        ("arXiv", "https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg", "https://arxiv.org/abs/2303.11331"),
+    ],
+    "capability": "ImageNet-1k single-label image classification (1000 classes) using the pinned EVA-02 Base patch-14 448 px weights",
+    "intro": (
+        "At inference the pipeline **squash-resizes every input to a fixed 448 x 448** (aspect ratio is not preserved — "
+        "a non-square image is stretched, not cropped), normalises with the CLIP mean/std from the snapshot config, runs "
+        "one forward pass of the vision transformer, and applies a softmax over 1000 logits. "
+        "**No adaptation occurs:** no training, fine-tuning, in-context conditioning, or preprocessing fitting happens "
+        "in this notebook — the upstream checkpoint supplies the architecture, weights, preprocessing configuration and "
+        "label space, and the carried pipeline module adds snapshot verification, input validation, a fixed output "
+        "contract and the `top_k_accuracy`, `validate_inputs` and `evaluation_report` helpers. The default sample is a "
+        "synthetic image generated in code; its prediction is demonstration (plumbing) evidence, not a production-quality "
+        "or benchmark claim."
+    ),
+    "learning_objectives": (
+        "install the pinned runtime, read what the carried pipeline module guarantees, resolve and digest-verify the "
+        "immutable upstream model revision, generate a deliberately non-square synthetic input and validate it into an "
+        "input manifest, run the supported task, read the argmax decision and the uncalibrated top-k softmax scores "
+        "correctly, exercise an optional BYOD path, produce an evaluation report that is `sample-sanity` only when a "
+        "ground-truth class index exists and `not-measurable` otherwise, and export machine-readable outputs plus provenance."
+    ),
+    "exclusions": (
+        "object detection, segmentation, multi-label tagging, OCR, open-vocabulary classification, feature/embedding "
+        "extraction (the DINOv2 sibling covers that), or any training. The label space is fixed to the 1000 ImageNet-1k "
+        "classes; an image whose subject is outside that space still receives a label."
+    ),
+    "prerequisites": [
+        "- **Runtime:** a fresh supported runtime (Google Colab or Jupyter, Python 3.12). The default path runs on CPU and uses CUDA automatically when available; inference is float32 on both. This is the heaviest of the DIMER timm classifiers (107 GMACs per 448 px image): on the model card's GPU (RTX 5070 Ti) the verified snapshot loaded in 6.4 s and one prediction took 0.8 s; **CPU works but is slow** — the card records no CPU figure and expects it to be tens of times slower than the 224 px siblings, so allow minutes, not seconds, for the single default prediction on a hosted CPU runtime. The pinned `torch==2.14.0` install and the 348 MB checkpoint are the largest downloads of the run.",
+        "- **Knowledge:** basic Python and PIL image handling; what a softmax over class logits is and why it is not a calibrated probability.",
+        "- **Data:** the default sample is a deterministic 320 x 240 RGB gradient generated in code — deliberately **not square**, so the squash to 448 x 448 is visible in the printed aspect ratio — so nothing is downloaded and no private data is needed. Optional BYOD upload is gated off by default so the sample path can run top-to-bottom without interaction. Expected BYOD input: one image file decodable by Pillow (PNG/JPEG/WebP and similar), any colour mode, longest side at most 4096 px; it is squash-resized to 448 x 448 regardless of its aspect ratio. Do not upload confidential or restricted data to a hosted notebook environment unless you are authorized to do so. Uploaded inputs remain in the notebook runtime; this pipeline does not send them to a third-party inference API.",
+    ],
+    "cells": [
+        {
+            "md": (
+                "## 4. Generate the synthetic sample or optional BYOD\n\n"
+                "The default sample is **synthetic**: a deterministic 320 x 240 RGB gradient built in code (red ramps left "
+                "to right, green top to bottom, blue is their mean), so it needs no download and its SHA-256 is printed for "
+                "the record. It is deliberately **not square** so that the squash to 448 x 448 is visible in the printed "
+                "aspect ratio. A gradient is not a photograph of any ImageNet class, so it has **no ground truth**: whatever "
+                "label the model returns is a sanity check that the input contract, preprocessing and forward pass work, not "
+                "a correctness measurement. BYOD is optional and disabled by default; when enabled, upload one image file "
+                "and, if you know its ImageNet-1k class index (0–999), set `GROUND_TRUTH_INDEX` so the evaluation step can "
+                "compute `top_k_accuracy`. Leave it at `-1` when the label is unknown. Look for a dictionary naming the "
+                "sample kind, its size, aspect ratio and digest, and whether a ground-truth index was supplied."
+            ),
+            "code": (
+                "import hashlib\n"
+                "import io\n\n"
+                "import numpy as np\n"
+                "from PIL import Image\n\n"
+                "USE_BYOD = False  # @param {{type:\"boolean\"}}\n"
+                "GROUND_TRUTH_INDEX = -1  # @param {{type:\"integer\"}}\n"
+                "SAMPLE_WIDTH = 320\n"
+                "SAMPLE_HEIGHT = 240\n\n"
+                "if USE_BYOD:\n"
+                "    from google.colab import files\n"
+                "    uploaded = files.upload()\n"
+                "    image_name = next(iter(uploaded))\n"
+                "    image = Image.open(io.BytesIO(uploaded[image_name]))\n"
+                "    image.load()\n"
+                "    sample_kind = 'BYOD'\n"
+                "else:\n"
+                "    # Deterministic synthetic gradient, deliberately non-square so the squash to 448x448 is visible.\n"
+                "    red = np.tile(np.linspace(0.0, 255.0, SAMPLE_WIDTH), (SAMPLE_HEIGHT, 1))\n"
+                "    green = np.tile(np.linspace(0.0, 255.0, SAMPLE_HEIGHT), (SAMPLE_WIDTH, 1)).T\n"
+                "    blue = (red + green) / 2.0\n"
+                "    array = np.rint(np.stack([red, green, blue], axis=-1)).astype(np.uint8)\n"
+                "    image = Image.fromarray(array, mode='RGB')\n"
+                "    image_name = f'synthetic_gradient_{{SAMPLE_WIDTH}}x{{SAMPLE_HEIGHT}}.png'\n"
+                "    sample_kind = 'synthetic'\n\n"
+                "if GROUND_TRUTH_INDEX != -1 and not 0 <= GROUND_TRUTH_INDEX < NUM_CLASSES:\n"
+                "    raise ValueError(f'GROUND_TRUTH_INDEX must be -1 (unknown) or an ImageNet-1k class index in 0..{{NUM_CLASSES - 1}}, got {{GROUND_TRUTH_INDEX}}.')\n"
+                "ground_truth = None if GROUND_TRUTH_INDEX == -1 else GROUND_TRUTH_INDEX\n"
+                "sample_sha256 = hashlib.sha256(np.asarray(image.convert('RGB')).tobytes()).hexdigest()\n"
+                "aspect_ratio = round(image.size[0] / image.size[1], 3)\n"
+                "print({{'sample_kind': sample_kind, 'name': image_name, 'mode': image.mode, 'size': image.size, 'aspect_ratio': aspect_ratio, 'rgb_sha256': sample_sha256, 'ground_truth_index': ground_truth}})"
+            ),
+        },
+        {
+            "md": (
+                "## 5. Validate the input → input manifest\n\n"
+                "`validate_inputs` is the pipeline's public validation stage: it applies exactly the checks `predict` "
+                "applies — type, batch size 1..`MAX_BATCH`, image side 1..`MAX_IMAGE_SIDE` px, `top_k` 1..`NUM_CLASSES` — "
+                "and returns an **input manifest** naming the schema and ceilings, each input's observed mode and size, "
+                "and the verdict. The manifest is written to `outputs/{stem}_input_manifest.json`. To show what rejection "
+                "looks like, the cell also validates a deliberately oversized image and records the pipeline's own error "
+                "message as a finding. **What the pipeline changes about your image:** it converts to RGB and "
+                "squash-resizes to exactly 448 x 448 (`crop_mode: \"squash\"`, `crop_pct: 1.0` in the snapshot config) — "
+                "nothing is cropped or dropped, but a non-square image is distorted in proportion to the aspect ratio "
+                "printed above. The notebook itself does not resize, crop, or subsample."
+            ),
+            "code": (
+                "import json\n"
+                "import os\n\n"
+                "os.makedirs('outputs', exist_ok=True)\n"
+                "print({{'ceilings': {{'NUM_CLASSES': NUM_CLASSES, 'MAX_IMAGE_SIDE': MAX_IMAGE_SIDE, 'MAX_BATCH': MAX_BATCH}}}})\n"
+                "input_manifest = validate_inputs(image, top_k=5, names=[image_name])\n"
+                "# Demonstrate rejection on an input that breaks a ceiling; the finding is recorded, not swallowed.\n"
+                "try:\n"
+                "    validate_inputs(Image.new('RGB', (MAX_IMAGE_SIDE + 1, 8)))\n"
+                "except ValueError as exc:\n"
+                "    input_manifest['findings'].append({{'input': 'oversized-probe', 'verdict': 'rejected', 'message': str(exc)}})\n"
+                "with open('outputs/{stem}_input_manifest.json', 'w', encoding='utf-8') as handle:\n"
+                "    json.dump(input_manifest, handle, indent=2, ensure_ascii=False)\n"
+                "print(json.dumps(input_manifest, indent=2))"
+            ),
+        },
+        {
+            "md": (
+                "## 6. Classify\n\n"
+                "`predict` returns, per image, `predicted_index`/`predicted_label` and a `top_k` list of `{{label, index, "
+                "score}}` entries **ordered by descending score** — rank position is the class ordering, and the exported "
+                "files preserve it. The decision rule is `argmax` over the 1000 softmax scores (`decision_rule` in the "
+                "result); the pipeline ships no acceptance threshold, and `score` is a softmax over uncalibrated logits, "
+                "**not a calibrated probability**. A deployment that needs an abstain option must choose its own score "
+                "cut-off on its own labelled data — downstream calibration is the caller's responsibility. Inference is "
+                "deterministic given the same weights, device and library versions (no sampling, `model.eval()`); CPU and "
+                "CUDA kernel choices can reorder near-tied classes. Look for the ranked top-5 list; on the gradient expect "
+                "a low top-1 score spread across unrelated classes (the model card's smoke run labelled one "
+                "`screen, CRT screen` at score 0.013). On a CPU runtime this cell is the slow one — minutes, not seconds."
+            ),
+            "code": (
+                "result = pipe.predict(image, top_k=5)\n"
+                "prediction = result['predictions'][0]\n"
+                "print({{'decision_rule': result['decision_rule'], 'predicted_index': prediction['predicted_index'], 'predicted_label': prediction['predicted_label'], 'device': result['device'], 'source': result['source']}})\n"
+                "for rank, item in enumerate(prediction['top_k'], start=1):\n"
+                "    print(f\"{{rank:>2}}. index {{item['index']:>4}}  score {{item['score']:.4f}}  {{item['label']}}\")"
+            ),
+        },
+        {
+            "md": (
+                "## 7. Evaluate → evaluation report\n\n"
+                "`evaluation_report` is the pipeline's public evaluation stage and always produces a report. When a "
+                "ground-truth class index was supplied in Section 4 it carries `top_k_accuracy` (the repository's metric "
+                "helper) at k=1 and k=5 with the verdict `sample-sanity` — a single-image tutorial figure (0.0 or 1.0) with "
+                "no dispersion estimate, and nothing that can be generalised to a domain. On the synthetic default sample "
+                "no metric exists, so the verdict is `not-measurable` and the report states what would make the task "
+                "measurable: labelled photographs with ImageNet-1k class indices, for example a held-out sample of your own "
+                "data scored against its majority-class baseline. The upstream 88.692 % top-1 / 98.722 % top-5 at 448 px on the ImageNet-1k validation "
+                "set is an upstream claim quoted by the model card, not something this notebook measures. The report is "
+                "written to `outputs/{stem}_evaluation_report.json`."
+            ),
+            "code": (
+                "targets = None if ground_truth is None else [ground_truth]\n"
+                "report = evaluation_report(result, targets, sample_kind=sample_kind)\n"
+                "with open('outputs/{stem}_evaluation_report.json', 'w', encoding='utf-8') as handle:\n"
+                "    json.dump(report, handle, indent=2, ensure_ascii=False)\n"
+                "print(json.dumps(report, indent=2))\n"
+                "if report['verdict'] == 'not-measurable':\n"
+                "    print('No ground-truth class index was supplied, so top_k_accuracy is not computed; the prediction above is sanity evidence only.')"
+            ),
+        },
+        {
+            "md": (
+                "## 8. Export outputs and provenance\n\n"
+                "Machine-readable JSON preserves the full prediction (argmax decision and the rank-ordered top-k scores), "
+                "the evaluation report, the input manifest, the sample identity, aspect ratio and digest, the notebook's "
+                "source (repository, revision, embedded module digest, generator), the model identifier, the immutable "
+                "model revision, the model licence, and the runtime identity (Python, `torch`, `timm`, device). The "
+                "rank-ordered top-k table is also written as CSV with explicit `rank`, `index`, `label` and `score` columns "
+                "so class ordering survives downstream use. No credentials are recorded."
+            ),
+            "code": (
+                "import csv\n\n"
+                "payload = {{\n"
+                "    'prediction': result,\n"
+                "    'evaluation_report': report,\n"
+                "    'input_manifest': input_manifest,\n"
+                "    'sample': {{'kind': sample_kind, 'name': image_name, 'size': list(image.size), 'aspect_ratio': aspect_ratio, 'rgb_sha256': sample_sha256, 'ground_truth_index': ground_truth}},\n"
+                "    'notebook_source': NOTEBOOK_SOURCE,\n"
+                "    'repository_revision': NOTEBOOK_SOURCE['repository_revision'],\n"
+                "    'model_id': MODEL_ID,\n"
+                "    'model_revision': MODEL_REVISION,\n"
+                "    'model_license': MODEL_LICENSE,\n"
+                "    'runtime': {{\n"
+                "        'python': platform.python_version(),\n"
+                "        'torch': torch.__version__,\n"
+                "        'timm': timm.__version__,\n"
+                "        'device': pipe.device,\n"
+                "    }},\n"
+                "}}\n"
+                "with open('outputs/{stem}_result.json', 'w', encoding='utf-8') as handle:\n"
+                "    json.dump(payload, handle, indent=2, ensure_ascii=False)\n"
+                "with open('outputs/{stem}_top_k.csv', 'w', encoding='utf-8', newline='') as handle:\n"
+                "    writer = csv.writer(handle)\n"
+                "    writer.writerow(['image', 'rank', 'index', 'label', 'score'])\n"
+                "    for rank, item in enumerate(prediction['top_k'], start=1):\n"
+                "        writer.writerow([image_name, rank, item['index'], item['label'], f\"{{item['score']:.6f}}\"])\n"
+                "print(sorted(os.listdir('outputs')))"
+            ),
+        },
+    ],
+    "closing": (
+        "## Interpretation and limits\n\n"
+        "The predicted label is the argmax of a softmax over the fixed 1000-class ImageNet-1k label space; the `score` "
+        "values are uncalibrated softmax outputs, not probabilities of correctness, and the pipeline ships no threshold. "
+        "On the synthetic gradient the label is meaningless by construction and the evaluation report says "
+        "`not-measurable`; a `top_k_accuracy` value shown for a single BYOD image is 0 or 1 and says nothing about the "
+        "error rate on a domain. Every input is squash-resized to 448 x 448, so strongly non-square subjects are distorted "
+        "before classification; the pipeline does not detect out-of-distribution inputs (drawings, scans, satellite tiles), "
+        "blur, or capture-device drift, and it exposes no features, no detection, and no labels beyond the fixed 1000. "
+        "Small numeric differences between CPU and CUDA kernels can reorder near-tied classes, so results on fixed "
+        "hardware are repeatable but not guaranteed bitwise-identical across devices.\n\n"
+        "Successful execution proves that the recorded repository revision's pipeline module, carried in this notebook, "
+        "can acquire and digest-verify the pinned model, validate the demonstrated input against the enforced ceilings, "
+        "execute the public pipeline path, and emit the shown machine-readable outputs in the tested runtime — without the "
+        "repository being reachable. It does **not** establish benchmark superiority, reproduction of the upstream "
+        "accuracy, deployment calibration, safety for high-consequence decisions, or production fitness on an unseen domain.\n\n"
+        "**Troubleshooting.** `RuntimeError: Core dependencies changed while older modules were loaded` in Section 1: the "
+        "pinned install replaced a package the runtime had pre-imported — restart the runtime and rerun from the top. A "
+        "`sha256`/`size` `ValueError` or `FileNotFoundError: snapshot file missing` in Section 3: a staged file is "
+        "incomplete or altered — delete it from the working-directory `weights/eva02-base-448/` and rerun Section 3. A "
+        "`ValueError` naming `MAX_IMAGE_SIDE` or `GROUND_TRUTH_INDEX`: fix the form values in Section 4 and rerun from "
+        "there. A very slow Section 6 on a CPU runtime is expected for this 107-GMAC model; switch to a CUDA runtime or "
+        "use the MobileNetV4 sibling for CPU latency.\n\n"
+        "**Next experiments:** enable `USE_BYOD` with a photograph of a known ImageNet class and its index to see the "
+        "report switch to `sample-sanity` with `top_k_accuracy` at k=1 and k=5; upload a strongly non-square version of "
+        "the same photograph to observe the effect of the squash; compare the CUDA and CPU top-5 orderings on the same "
+        "image to observe kernel-level variability.\n\n"
+        "## References\n\n"
+        "- Repository README: https://github.com/kurtvalcorza/eva02-classification-pipeline/blob/main/README.md\n"
+        "- Repository model card: https://github.com/kurtvalcorza/eva02-classification-pipeline/blob/main/MODEL_CARD.md\n"
+        "- Weight provenance: https://github.com/kurtvalcorza/eva02-classification-pipeline/blob/main/docs/WEIGHTS.md\n"
+        "- Upstream model: https://huggingface.co/{MODEL_ID}\n"
+        "- Upstream code: https://github.com/baaivision/EVA\n"
+        "- EVA-02 paper: https://arxiv.org/abs/2303.11331\n"
+        "- timm documentation: https://huggingface.co/docs/timm"
+    ),
+}
