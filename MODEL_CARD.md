@@ -3,6 +3,8 @@ license: mit
 model_card_spec: "1.1"
 pipeline_tag: image-classification
 base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
+date_published: "2023-03-31"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)"
 ---
 
 # EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0) — Image Classification
@@ -11,7 +13,6 @@ base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2303.11331-b31b1b.svg)](https://arxiv.org/abs/2303.11331)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Pipeline](https://img.shields.io/badge/Pipeline-eva02--classification--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/eva02-classification-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -28,7 +29,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 `timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k` is the EVA-02 Base vision transformer (Fang et al., arXiv:2303.11331): pre-trained on ImageNet-22k with masked image modelling using EVA-CLIP as the teacher, fine-tuned on ImageNet-22k and then on ImageNet-1k by the paper authors, converted to float32 and published in `timm` (upstream README), pinned here to revision `81063ecfe9c381a16a19d06f396d6c7011aa426a`. The network embeds a fixed 448×448 image as 32×32 = 1024 patches of 14 px plus a class token (1025 tokens of width 768, per the upstream README `forward_features` example), runs them through transformer blocks with SwiGLU MLPs, rotary position embeddings and an extra LayerNorm in the MLP (upstream README), mean-pools the tokens (`global_pool: "avg"` in the snapshot `config.json`) and applies a 1000-way `head`. Upstream reports 87.1 M parameters and 107.1 GMACs — roughly 24× the compute of the sibling ConvNeXt-Tiny at 224 px — which is the price of the 448-px input. Inference maps a normalised 3×448×448 tensor to 1000 logits in one forward pass; nothing is adapted or fine-tuned here. What this repository adds is packaging: the `EVA02ClassificationPipeline` class in `src/eva02_classification_pipeline/pipeline.py`, digest verification of the local snapshot (`verify_snapshot`), input validation, a fixed output contract and a `top_k_accuracy` helper.
 
@@ -60,7 +61,7 @@ ImageNet images were collected from web image searches (Deng et al., 2009) and a
 
 ###### Environment
 
-Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `timm==1.0.29`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is the intended device; `from_pretrained` picks `cuda:0` when available, else CPU, and runs in float32 on both (the checkpoint is 348 MB float32). On this repository's smoke run (claude-science WSL venv, RTX 5070 Ti 16 GB, one synthetic 256×256 image through `EVA02ClassificationPipeline.from_pretrained().predict`) loading the verified snapshot took 6.42 s and one 448-px prediction 0.81 s including transform and first-call CUDA warm-up — against 4.67 s / 1.47 s for the ConvNeXt-Tiny sibling on the same host, so the load is heavier and the warmed forward pass is not the bottleneck at batch 1. The CPU path was not measured and is expected to be tens of times slower than the 224-px siblings given 107 GMACs per image. Data environment: inputs are assumed to be natural photographs whose subject is one of the 1000 classes; line drawings, medical scans, satellite tiles, heavy occlusion or unusual viewpoints fall outside that assumption and degrade accuracy in ways the pipeline does not measure.
+Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `timm==1.0.29`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is the intended device; `from_pretrained` picks `cuda:0` when available, else CPU, and runs in float32 on both (the checkpoint is 348 MB float32). On this repository's smoke run (claude-science WSL venv, RTX 5070 Ti 16 GB, one synthetic 256×256 image through `EVA02ClassificationPipeline.from_pretrained().predict`) loading the verified snapshot took 6.42 s and one 448-px prediction 0.81 s including transform and first-call CUDA warm-up — against 4.67 s / 1.47 s for the ConvNeXt-Tiny sibling on the same host, so the load is heavier and the warmed forward pass is not the bottleneck at batch 1. The CPU path was not measured and is expected to be tens of times slower than the 224-px siblings given 107 GMACs per image. Data environment: inputs are assumed to be natural photographs whose subject is one of the 1000 classes; line drawings, medical scans, satellite tiles, heavy occlusion or unusual viewpoints fall outside that assumption and degrade accuracy in ways the pipeline does not measure.
 
 #### Metrics
 
@@ -116,7 +117,7 @@ The pipeline must not be used for surveillance, biometric or demographic profili
 
 ## Runtime
 
-- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `timm==1.0.29`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12.
+- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `timm==1.0.29`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12.
 - Precision: float32 on both CPU and CUDA; preprocessing squash-resize to 448×448, bicubic, CLIP mean `[0.4815, 0.4578, 0.4082]` / std `[0.2686, 0.2613, 0.2758]` from the snapshot `config.json`.
 - Measured (claude-science WSL venv, RTX 5070 Ti 16 GB, `HF_HUB_OFFLINE=1`): device `cuda:0`, source `local-snapshot`, load 6.42 s, predict 0.81 s, total 7.23 s, top-1 on a synthetic 256×256 gradient image `screen, CRT screen` (index 782) at score 0.0127. CPU not measured.
 - Tests: `pytest -q -o addopts= tests` — 11 passed, offline, no weights required; `ruff check src tests` clean.
