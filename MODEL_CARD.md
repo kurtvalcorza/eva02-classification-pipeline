@@ -2,6 +2,7 @@
 license: mit
 model_card_spec: "1.1"
 pipeline_tag: image-classification
+task: "Image Classification"
 base_model: timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k
 date_published: "2023-03-31"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)"
