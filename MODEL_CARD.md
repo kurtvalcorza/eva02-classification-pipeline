@@ -61,7 +61,7 @@ ImageNet images were collected from web image searches (Deng et al., 2009) and a
 
 ###### Environment
 
-Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `timm==1.0.29`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is the intended device; `from_pretrained` picks `cuda:0` when available, else CPU, and runs in float32 on both (the checkpoint is 348 MB float32). On this repository's smoke run (claude-science WSL venv, RTX 5070 Ti 16 GB, one synthetic 256×256 image through `EVA02ClassificationPipeline.from_pretrained().predict`) loading the verified snapshot took 6.42 s and one 448-px prediction 0.81 s including transform and first-call CUDA warm-up — against 4.67 s / 1.47 s for the ConvNeXt-Tiny sibling on the same host, so the load is heavier and the warmed forward pass is not the bottleneck at batch 1. The CPU path was not measured and is expected to be tens of times slower than the 224-px siblings given 107 GMACs per image. Data environment: inputs are assumed to be natural photographs whose subject is one of the 1000 classes; line drawings, medical scans, satellite tiles, heavy occlusion or unusual viewpoints fall outside that assumption and degrade accuracy in ways the pipeline does not measure.
+Operating environment: Python 3.12 with `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `timm==1.0.29`, `pillow==11.3.0` (exact pins in `pyproject.toml`). CUDA is the intended device; `from_pretrained` picks `cuda:0` when available, else CPU, and runs in float32 on both (the checkpoint is 348 MB float32). On this repository's smoke run (claude-science WSL venv, RTX 5070 Ti 16 GB, one synthetic 256×256 image through `EVA02ClassificationPipeline.from_pretrained().predict`) loading the verified snapshot took 6.42 s and one 448-px prediction 0.81 s including transform and first-call CUDA warm-up — against 4.67 s / 1.47 s for the ConvNeXt-Tiny sibling on the same host, so the load is heavier and the warmed forward pass is not the bottleneck at batch 1. The CPU path was not measured and is expected to be tens of times slower than the 224-px siblings given 107 GMACs per image. Data environment: inputs are assumed to be natural photographs whose subject is one of the 1000 classes; line drawings, medical scans, satellite tiles, heavy occlusion or unusual viewpoints fall outside that assumption and degrade accuracy in ways the pipeline does not measure.
 
 #### Metrics
 
@@ -117,7 +117,7 @@ The pipeline must not be used for surveillance, biometric or demographic profili
 
 ## Runtime
 
-- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `timm==1.0.29`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12.
+- Pins: `torch==2.14.0`, `torchvision==0.29.0`, `torchaudio==2.11.0`, `timm==1.0.29`, `huggingface-hub==0.36.2`, `safetensors==0.8.0`, `numpy==2.5.3`, `pillow==11.3.0`; Python 3.12.
 - Precision: float32 on both CPU and CUDA; preprocessing squash-resize to 448×448, bicubic, CLIP mean `[0.4815, 0.4578, 0.4082]` / std `[0.2686, 0.2613, 0.2758]` from the snapshot `config.json`.
 - Measured (claude-science WSL venv, RTX 5070 Ti 16 GB, `HF_HUB_OFFLINE=1`): device `cuda:0`, source `local-snapshot`, load 6.42 s, predict 0.81 s, total 7.23 s, top-1 on a synthetic 256×256 gradient image `screen, CRT screen` (index 782) at score 0.0127. CPU not measured.
 - Tests: `pytest -q -o addopts= tests` — 11 passed, offline, no weights required; `ruff check src tests` clean.
