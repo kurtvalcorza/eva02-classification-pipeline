@@ -7,7 +7,7 @@ date_published: "2023-03-31"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)"
 ---
 
-# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k (DIMER package v0.1.0) — Image Classification
+# EVA-02 Base patch14 448 mim_in22k_ft_in22k_in1k — Image Classification
 
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-timm%2Feva02__base__patch14__448.mim__in22k__ft__in22k__in1k-ffcc4d?style=flat)](https://huggingface.co/timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k)
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-baaivision%2FEVA-181717?style=flat&logo=github&logoColor=white)](https://github.com/baaivision/EVA)
