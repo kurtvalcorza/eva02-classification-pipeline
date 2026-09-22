@@ -38,7 +38,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ###### Primary Intended Uses
 
-The task is single-label image classification: input one PIL image or a batch of up to `MAX_BATCH = 64` images; output, per image, the `top_k` (default 5) ImageNet-1k classes with their softmax scores plus the argmax label. Envisioned applications are the ones where accuracy is the constraint and a GPU is available — curated archive tagging, offline re-labelling of large collections, second-opinion classification behind a cheaper model, and an accuracy reference in the DIMER workbench (upstream reports 88.7 % top-1, the highest of the four timm classifiers in this set). In a larger system the pipeline is an inference component, not a decision engine; the 768-d pooled features are not exposed by this package (the DINOv2 sibling covers feature extraction).
+The task is single-label image classification: input one PIL image or a batch of up to `MAX_BATCH = 64` images; output, per image, the `top_k` (default 5) ImageNet-1k classes with their softmax scores plus the argmax label. Envisioned applications are the ones where accuracy is the constraint and a GPU is available — curated archive tagging, offline re-labelling of large collections, second-opinion classification behind a cheaper model, and an accuracy reference (upstream reports 88.7 % top-1, the highest of the four timm classifiers in this set). In a larger system the pipeline is an inference component, not a decision engine; the 768-d pooled features are not exposed by this package (the DINOv2 sibling covers feature extraction).
 
 ###### Primary Intended Users
 
