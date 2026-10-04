@@ -1,0 +1,107 @@
+[colab] Parsing notebook '/home/kurt/colab-runs/eva02-classification-pipeline-096947b-0bc403/eva02_classification_colab_096947b_colab-cli-t4.ipynb'...
+[colab] Executing cell 1/14 - Infrastructure: install the locked runtime into an isolated environment...
+{'isolated_environment': '/content/dimer_isolated_env', 'isolated_python': '3.12.12', 'kernel_python': '3.13.15', 'locked_packages': 45, 'setup_seconds': 53}
+[colab] Executing cell 2/14 - Infrastructure: route the remaining cells to the isolated environment...
+Every later code cell now runs in /content/dimer_isolated_env/bin/python (pid 2731).
+[colab] Executing cell 3/14 - Infrastructure: record the runtime...
+{'notebook_source': {'repository': 'eva02-classification-pipeline', 'repository_revision': '766d7ae24f09a94ef4f6612c0a3f1ecd47faa352', 'embedded_module': 'src/eva02_classification_pipeline/pipeline.py', 'embedded_modules': ['src/eva02_classification_pipeline/pipeline.py'], 'module_sha256': '48d0e760eb440578fea060e43d65f76baab011861d676530fdbb11c772e8cd19', 'generator': 'build_notebook.py/2.1', 'notebook_spec': '2.2'}, 'python': '3.12.12', 'torch': '2.14.0+cu130', 'timm': '1.0.29', 'cuda': True}
+[colab] Executing cell 4/14 - Infrastructure: carried module `src/eva02_classification_pipeline/pipeline.py` (you may run it without reading it)...
+[colab] Executing cell 5/14 - Infrastructure: pin, stage and verify the model (you may run it without reading it)...
+{'model_id': 'timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k', 'revision': '81063ecfe9c381a16a19d06f396d6c7011aa426a', 'license': 'mit', 'files': 3, 'total_bytes': 348498591}
+{'weights_dir': '/content/weights/eva02-base-448', 'fetched': ['README.md', 'config.json', 'model.safetensors']}
+{'verified_files': 3, 'revision': '81063ecfe9c381a16a19d06f396d6c7011aa426a'}
+{'device': 'cuda:0', 'source': 'local-snapshot'}
+[colab] Executing cell 6/14 - eva02_classification-13...
+{'sample_kind': 'synthetic', 'name': 'synthetic_gradient_320x240.png', 'mode': 'RGB', 'size': (320, 240), 'aspect_ratio': 1.333, 'rgb_sha256': 'ea57d6d3afa97994abfd8e6921e651b52babc122bd323498d0015d603ceba6e8', 'ground_truth_index': None}
+<isolated cell 4>:37: DeprecationWarning: 'mode' parameter is deprecated and will be removed in Pillow 13 (2026-10-15)
+  image = Image.fromarray(array, mode='RGB')
+[colab] Executing cell 7/14 - eva02_classification-15...
+{'ceilings': {'NUM_CLASSES': 1000, 'MAX_IMAGE_SIDE': 4096, 'MAX_BATCH': 64}}
+{
+  "schema": {
+    "input": "PIL.Image.Image or a sequence of them; any mode, converted to RGB",
+    "image_side_px": [
+      1,
+      4096
+    ],
+    "batch": [
+      1,
+      64
+    ],
+    "top_k": [
+      1,
+      1000
+    ],
+    "preprocessing": "convert to RGB, squash-resize to 448x448 (crop_mode squash, bicubic), CLIP mean/std"
+  },
+  "inputs": [
+    {
+      "id": "synthetic_gradient_320x240.png",
+      "mode": "RGB",
+      "size": [
+        320,
+        240
+      ]
+    }
+  ],
+  "top_k": 5,
+  "verdict": "accepted",
+  "findings": [
+    {
+      "input": "oversized-probe",
+      "verdict": "rejected",
+      "message": "image side outside 1..MAX_IMAGE_SIDE=4096 px: (4097, 8)"
+    }
+  ],
+  "model_id": "timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k",
+  "model_revision": "81063ecfe9c381a16a19d06f396d6c7011aa426a"
+}
+[colab] Executing cell 8/14 - eva02_classification-17...
+{'decision_rule': 'argmax', 'predicted_index': 585, 'predicted_label': 'hair spray', 'device': 'cuda:0', 'source': 'local-snapshot'}
+ 1. index  585  score 0.0179  hair spray
+ 2. index  641  score 0.0164  maraca
+ 3. index  885  score 0.0150  velvet
+ 4. index  782  score 0.0150  screen, CRT screen
+ 5. index  714  score 0.0147  pick, plectrum, plectron
+[colab] Executing cell 9/14 - eva02_classification-19...
+{
+  "task": "imagenet-1k single-label classification",
+  "decision_rule": "argmax",
+  "sample_kind": "synthetic",
+  "n_predictions": 1,
+  "baselines": [],
+  "model_id": "timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k",
+  "model_revision": "81063ecfe9c381a16a19d06f396d6c7011aa426a",
+  "metrics": [],
+  "verdict": "not-measurable",
+  "reason": "no ground-truth class index was supplied for the evaluated images",
+  "needs": "labelled photographs with ImageNet-1k class indices (0-999), e.g. a held-out sample of your own data, scored with top_k_accuracy against the majority-class baseline of that sample"
+}
+No ground-truth class index was supplied, so top_k_accuracy is not computed; the prediction above is sanity evidence only.
+[colab] Executing cell 10/14 - eva02_classification-21...
+{'dataset': 'tutorial dataset', 'source': 'Cleanlab/cifar-10-subset @ bb5a7aab (MIT)', 'sha256': '66f90a4f87d865e8eb653b62f10e754684075a32314177de76832349d4b1fb19', 'layout': 'class folders, seeded pair-grouped split', 'image_size_px': [32, 32]}
+class                            train  held out
+frog                                80        20
+truck                               80        20
+{'train_images': 160, 'held_out_images': 40, 'held_out_sharing_a_file_name_with_train': 0, 'held_out_pixel_copies_in_train': 0, 'skipped_files': []}
+[colab] Executing cell 11/14 - eva02_classification-23...
+{'method': 'head-only fine-tuning', 'trainable_parameters': 1538, 'frozen_parameters': 86348544, 'epochs': 1, 'batch_size': 4, 'learning_rate': 0.0001, 'weight_decay': 0.01, 'seed': 20260910}
+{'fine_tuning': 'complete', 'method': 'head-only fine-tuning', 'device': 'cuda:0', 'classes': ['frog', 'truck'], 'train_samples': 160, 'val_samples': 40}
+{'epoch': 1, 'train_loss': 0.38, 'val_loss': 0.1707, 'val_accuracy': 0.95}
+[colab] Executing cell 12/14 - eva02_classification-25...
+{'fresh_boundary_source': 'fine-tuned-artifact', 'images': 40, 'label_agreement': 40, 'max_score_difference': 0.0, 'tolerance': 0.0001, 'equivalent': True}
+Held-out images: 40 (tutorial dataset) - a tutorial metric, not a benchmark
+Accuracy:        38/40 = 95.0%   95% Wilson interval 83.5% to 98.6%
+Majority-class baseline: 50.0% (always answering 'frog')
+Verdict: sample-sanity; comparison to baseline: above-baseline
+  frog                            18/20 correct
+  truck                           20/20 correct
+{'misclassified': [{'id': 'CIFAR-10-subset/original_images/frog/image_9.png', 'true_label': 'frog', 'predicted_label': 'truck', 'score': 0.5655664205551147}, {'id': 'CIFAR-10-subset/darkened_images/frog/image_9.png', 'true_label': 'frog', 'predicted_label': 'truck', 'score': 0.5307560563087463}]}
+[colab] Executing cell 13/14 - eva02_classification-27...
+{'outputs': ['eva02_classification_evaluation_report.json', 'eva02_classification_finetuned', 'eva02_classification_finetuned_evaluation_report.json', 'eva02_classification_input_manifest.json', 'eva02_classification_result.json', 'eva02_classification_top_k.csv', 'eva02_classification_validation_predictions.csv'], 'finetuned': ['model-config.json', 'model.safetensors']}
+['outputs/eva02_classification_finetuned/model.safetensors', 'outputs/eva02_classification_finetuned/model-config.json', 'outputs/eva02_classification_validation_predictions.csv', 'outputs/eva02_classification_finetuned_evaluation_report.json']
+[colab] Executing cell 14/14 - eva02_classification-29...
+method | trainable_parameters | epochs | learning_rate | split_seed | final_val_loss | correct | n | wilson_95 | comparison_to_baseline
+head-only fine-tuning | 1538 | 1 | 0.0001 | 42 | 0.1707 | 38 | 40 | [0.835, 0.986] | above-baseline
+One run so far. Set TRAINABLE = 'all' in Section 9, select that cell and choose Runtime > Run after; this table then shows both runs.
+[colab] Saving notebook with outputs to '/home/kurt/colab-runs/eva02-classification-pipeline-096947b-0bc403/eva02_classification_colab_096947b_colab-cli-t4_output.ipynb'...

@@ -123,6 +123,46 @@ they are measurements for the stated runtime, not general estimates.
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
 | 2026-09-14 | `78f7f7c` / `3f9b46469ce8` | Kaggle Tesla T4 (`kurtvalcorza/dimer-nb2-eva02-classification` v1) | Default path of the previous notebook version (inference, a 26-image fine-tune, reload, 6-image evaluation) | 209.4 s (as recorded; per-pass split not recorded) | **Not a one-pass `Run all`; not promotion evidence.** Pass 1 stopped in the install cell with the restart `RuntimeError` (core packages `cuda-bindings` and `numpy` changed while loaded); pass 2, after the restart, ran 10/10 code cells (held-out 5/6, verdict then hard-coded `success`; 348 MB staged). Superseded by the review fixes (isolated environment, no restart); the current blob has no hosted run yet. |
+| 2026-10-04 | `096947b` / `7db0121c81d0` | Colab CLI 0.7.4 sequential execution, fresh Colab Tesla T4 (session `suite-eva02-096947b-0bc4`) | Default path only (`TRAINABLE = 'head'`; inference, head-only fine-tuning, reload, held-out evaluation) | 129.1 s | **One pass, no restart, 0 errors**, 14/14 code cells. Held-out **38/40 = 95.0 %, 95 % Wilson 83.5 %–98.6 %**, above the 50 % majority baseline (verdict `sample-sanity`, `above-baseline`). See the record below. |
+
+### 2026-10-04 — Colab CLI one-pass run of `096947b` (fresh Colab Tesla T4)
+
+- **Commit / notebook blob:** `096947ba1df8edc2ba48b99e62917fe6472acdec` / `7db0121c81d0813625582b2da3e76a7aeb427ba1`
+  (blob checked against the fetched bytes before the VM was allocated; executed code-cell sources equal the commit's).
+- **Executor:** Colab CLI 0.7.4 sequential execution (`colab exec -f`), fresh Colab VM, Tesla T4, no repository
+  checkout, clean model cache. This is **not** a browser `Run all`: the CLI sets no execution counts, so cell order is
+  evidenced by `exec.log` (`Executing cell 1/14` … `14/14`, in order); forms were not rendered.
+- **Path:** default settings only (`USE_BYOD = False`, `GROUND_TRUTH_INDEX = -1`, `USE_BYOD_DATASET = False`,
+  `TRAINABLE = 'head'`). Wall time 129.1 s (suite wall clock, including installs and the model download).
+- **Outcome:** **one pass, no restart, 0 errors**; 14/14 code cells; cell 4 (the carried module definition) prints
+  nothing by design. One Pillow `DeprecationWarning` (`mode` parameter) in the sample cell; no GPU memory warning.
+- **Runtime:** isolated Python 3.12.12 (kernel 3.13.15, setup 53 s), 45 locked packages, torch 2.14.0+cu130,
+  timm 1.0.29, `cuda: True`, device `cuda:0`; `NOTEBOOK_SOURCE.repository_revision` `766d7ae2` =
+  `metadata.dimer.generated_from`.
+- **Model:** `timm/eva02_base_patch14_448.mim_in22k_ft_in22k_in1k` @ `81063ecfe9c381a16a19d06f396d6c7011aa426a`
+  (mit, 3 files, 348,498,591 bytes), loaded with `source == 'local-snapshot'`.
+- **Inference:** synthetic 320×240 gradient (RGB SHA-256 `ea57d6d3…`), input manifest `accepted` with the oversized
+  probe `rejected`; `decision_rule == 'argmax'`, top-1 `hair spray` (585); evaluation report `not-measurable`
+  (no ground truth).
+- **Section 8:** tutorial dataset `Cleanlab/cifar-10-subset @ bb5a7aab`, SHA-256 `66f90a4f…`; pair-grouped split
+  80 train / 20 held out per class (160 / 40), `held_out_sharing_a_file_name_with_train: 0`,
+  `held_out_pixel_copies_in_train: 0`.
+- **Section 9:** head-only fine-tuning, 1,538 trainable / 86,348,544 frozen parameters, 1 epoch, batch 4,
+  lr 1e-4; train loss 0.38, val loss 0.1707, val accuracy 0.95.
+- **Section 10:** reload `source == 'fine-tuned-artifact'`, 40/40 label agreement, max score difference 0.0,
+  `equivalent: True`. Held-out **38/40 = 95.0 %**, 95 % Wilson interval **83.5 % to 98.6 %**, majority baseline
+  50.0 % (`frog`), verdict `sample-sanity`, `comparison_to_baseline: above-baseline`; frog 18/20, truck 20/20;
+  misclassified: the original and darkened copies of `frog/image_9.png`, both called `truck`. These equal the
+  worked answers' local CPU figures (loss 0.38 / 0.17, 38/40, interval about 83 %–99 %, the same frog photo).
+- **Exports:** the result JSON, top-k CSV, validation-predictions CSV, input manifest, both evaluation reports and
+  `eva02_classification_finetuned/{model.safetensors,model-config.json}` were written.
+- **Evidence files** (`docs/execution-evidence/2026-10-04/`, byte-for-byte from the run directory):
+  - `eva02_classification_colab_096947b_colab-cli-t4_output.ipynb` — SHA-256 `87e9df0c264c1c3daa4dc3e54d3c47899c18d2472bbe88f6218cb7d64074e011`
+  - `exec.log` — SHA-256 `bc6cae561c159d2c0508e90516e349eb5807e88500e4d04d002916565888ef11`
+  - `run_summary.json` — SHA-256 `db8feefc7f02ee56b93e17e487e3bee9d2810004302db51f40f6b64b4c9076ac`
+- **Not exercised:** the BYOD image and BYOD dataset gates (step 7), the Section 12 activity (`TRAINABLE = 'all'`;
+  the worked answer's local CPU figure of 30/40 is not checked on T4) and any other optional journey; no browser
+  interaction.
 
 ## Current status
 
@@ -130,10 +170,9 @@ they are measurements for the stated runtime, not general estimates.
 install (the fleet's uv isolated environment), the fine-tuning method stated as it runs (head-only by default) and its
 configuration exported, a held-out verdict computed from the counts with its interval on a pair-grouped 40-image
 held-out set, a validated dataset intake, a digest mismatch that stops instead of falling back, a working network
-fallback, a reload equivalence check and the guided layer. Static validation (`tools/validate_release_assets.py`),
-the generator `--check`, ruff and the offline unit suite pass on this source; a local Windows CPU pre-flight
-(install skipped, real pinned weights, GPU hidden, not a supported runtime) ran every code cell (238 s of cell time;
-head-only 38/40). That is necessary but not sufficient: **no one-pass hosted `Run all` of the current notebook blob is
-recorded**, and the BYOD release gate (step 7) has not been exercised on a hosted runtime. The registry status remains
-**Candidate** until a reviewer confirms such a recorded run against the notebook blob under review and an integrator
-promotes it; promotion is not performed by the builder.
+fallback, a reload equivalence check and the guided layer. Static validation, the generator `--check`, ruff and the
+offline unit suite pass on this source. A one-pass hosted run of the current notebook blob `7db0121c` is recorded
+above (2026-10-04, Colab CLI sequential execution on a fresh Tesla T4, default path, 14/14 cells, no restart,
+held-out 38/40, Wilson 83.5 %–98.6 %). Remaining gates: the BYOD release gate (step 7) on a hosted runtime and a
+reviewer's confirmation of the recorded run against the blob under review. The registry status remains
+**Candidate** until an integrator promotes it; promotion is not performed by the builder.
