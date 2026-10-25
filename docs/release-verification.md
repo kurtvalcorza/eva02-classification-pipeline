@@ -166,6 +166,8 @@ they are measurements for the stated runtime, not general estimates.
 
 ## Current status
 
+**Tier C wording revision (2026-10-25, branch `fix/eva02-classification-tier-c-2026-10-25`, code commit `302ba3f`).** Markdown, header and metadata only: pretraining-overlap statement (DAT9), run-labelled numbers (REL13), the Section 12 collapse wording, use notice, `notebook_kind`, IEEE references and the DIMER Notebook Specification 2.5 declaration. The regenerated notebook blob `adc90dc0e7ca0d7d682d73e4e24232b26435d615` is **Candidate** and its hosted runs are **pending** (REL14); the 2026-10-04 Colab T4 run of `096947b` is evidence for blob `7db0121c` only.
+
 **Candidate.** The review fixes (EVA-M1..M4, EVA-m1..m6, review PR #9) regenerated the notebook: no in-kernel
 install (the fleet's uv isolated environment), the fine-tuning method stated as it runs (head-only by default) and its
 configuration exported, a held-out verdict computed from the counts with its interval on a pair-grouped 40-image
