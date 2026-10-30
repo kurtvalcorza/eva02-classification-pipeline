@@ -60,7 +60,7 @@ print(pipe.predict(Image.new("RGB", (256, 256), (90, 140, 200)))["predictions"][
 
 ## Release status
 
-**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The review fixes (EVA-M1..M4, EVA-m1..m6, review PR #9) regenerated the notebook; one-pass hosted runs are recorded for the previous blob `7db0121c` (Colab CLI sequential execution on a fresh Tesla T4, 2026-10-04) and for the tier C blob `adc90dc0` (commit `481916e`, the same executor, 2026-10-25, held-out 38/40) and the BYOD gate is still open (the 2026-09-14 Kaggle run needed a restart and is not a `Run all` PASS); complete `docs/release-verification.md` against the exact release revision before calling the notebook release-grade.
+**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The review fixes (EVA-M1..M4, EVA-m1..m6, review PR #9) regenerated the notebook; one-pass hosted runs are recorded for the previous blob `7db0121c` (Colab CLI sequential execution on a fresh Tesla T4, 2026-10-04) and for the tier C blob `adc90dc0` (commit `481916e`, the same executor, 2026-10-25, held-out 38/40), and the current blob `12c32883` (DAT20 refusal fix, code commit `fc27710`, PR #11 head `c34fe41`) passed its default path (held-out 38/40) and a scripted DAT20 refusal on a hosted Colab CLI T4 on 2026-10-29 (earlier blobs' runs are history, REL14), and the BYOD gate is still open (the 2026-09-14 Kaggle run needed a restart and is not a `Run all` PASS); complete `docs/release-verification.md` against the exact release revision before calling the notebook release-grade.
 
 ## Documents
 
